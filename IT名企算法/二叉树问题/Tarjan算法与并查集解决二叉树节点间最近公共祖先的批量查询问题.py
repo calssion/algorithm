@@ -68,23 +68,40 @@ def look(query,index): #查看query表和index表的生成情况
 query,index=query_index(d)
 look(query,index)
 
+'''
 def father_idx(father,data): #找到字典里对应的索引
     for i,j in father.items():
         if data in j:
             return i
+'''
 
-def ask(query,index,father,ans,head,col): #开始并查
+father=[i for i in range(10)] #9个节点，一开始以自身为集合
+
+def find(data): #并查集
+    if father[data]!=data:
+        father[data]=find(father[data])
+    return father[data]
+    
+def union(x,y): #合并
+    xr, yr = find(x), find(y)
+    if xr == yr:
+        return
+    father[yr] = xr
+
+def ask(query,index,father,ans,head,col): #开始tarjan算法
     if head.left is not None: #按照中序遍历顺序
         ask(query,index,father,ans,head.left,col)
         
     col|=set([head.value]) #已查节点
-    father[head.value].append(head.value) #初始化赋予自己,假设为叶子
+    #father[head.value].append(head.value) #初始化赋予自己,假设为叶子
 
     if head.left is not None and head.left.value in col:#左孩子合并
         left=head.left.value
-        idx=father_idx(father,left)
-        father[head.value].extend(father[idx])
-        del father[idx]
+        #idx=father_idx(father,left)
+        idx=find(left)
+        #father[head.value].extend(father[idx])
+        #del father[idx]
+        union(head.value,idx)
     
     #看是否具有查询任务
     for i in query[head.value]:
@@ -92,7 +109,8 @@ def ask(query,index,father,ans,head,col): #开始并查
             #第几项任务
             ant=(set(index[head.value])&set(index[i])).pop()
             if ans[ant]!=0:continue #已经完成的任务
-            idx=father_idx(father,i)
+            #idx=father_idx(father,i)
+            idx=find(i)
             ans[ant]=idx
             
     if head.right is not None:
@@ -100,12 +118,14 @@ def ask(query,index,father,ans,head,col): #开始并查
     #回溯时才处理右孩子
     if head.right is not None and head.right.value in col:#右孩子合并
         right=head.right.value
-        idx=father_idx(father,right)
-        father[head.value].extend(father[idx])
-        del father[idx]
+        #idx=father_idx(father,right)
+        idx=find(right)
+        #father[head.value].extend(father[idx])
+        #del father[idx]
+        union(head.value,idx)
         
 n=0
-father=collections.defaultdict(list) #代表每一个的合集的父节点
+#father=collections.defaultdict(list) #代表每一个的合集的父节点
 for i in d.keys(): #代表要查询的总数
     n+=1
 ans=[0]*n #结果集
